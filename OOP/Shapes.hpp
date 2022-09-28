@@ -10,7 +10,7 @@ namespace MathHelpers
     double DistanceBetweenPoints(QPointF a, QPointF b);
 }
 
-class Shape : public QGraphicsItem
+class Polygon : public QGraphicsItem
 {
 public:
     virtual void Draw(QPainter *painter) = 0;
@@ -22,10 +22,10 @@ public:
         Draw(painter);
     }
 
-    virtual ~Shape() {}
+    virtual ~Polygon() {}
 };
 
-class Triangle : public Shape
+class Triangle : public Polygon
 {
 private:
     QPointF _a;
@@ -83,7 +83,7 @@ public:
         painter->drawLine(a);
         painter->drawLine(b);
         painter->drawLine(c);
-        painter->setPen(QPen(Qt::green, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter->setPen(QPen(Qt::red, 10, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         painter->drawPoint(p);
     }
 

@@ -66,6 +66,9 @@ void MainWindow::_updateInfo()
     ui->labelBisBC->setText("Bisect BC: " + QString::number(triangle->GetBisectLengthForBC()));
     ui->labelBisCA->setText("Bisect CA: " + QString::number(triangle->GetBisectLengthForCA()));
 
+    ui->labelPerim->setText("Perimeter: " + QString::number(triangle->GetPerimeter()));
+    ui->labelArea->setText("Area: " + QString::number(triangle->GetArea()));
+
     scene->update();
 }
 MainWindow::~MainWindow()
