@@ -4,6 +4,7 @@
 #include <QGraphicsItem>
 #include <QPainter>
 #include <cmath>
+#include <QVector>
 
 namespace MathHelpers
 {
@@ -12,26 +13,42 @@ namespace MathHelpers
 
 class Polygon : public QGraphicsItem
 {
-public:
-    virtual void Draw(QPainter *painter) = 0;
-    virtual double GetPerimeter() const = 0;
-    virtual double GetArea() const = 0;
 
+public:
+    QPainterPath paintPath;
+    QVector<QPointF> Points;
+    virtual void Draw(QPainter *painter) = 0;
+    virtual double GetPerimeter() const
+    {
+        double result = 0;
+        for (int i = 1; i < Points.size(); i++)
+        {
+            result += MathHelpers::DistanceBetweenPoints(Points[i], Points[i - 1]);
+        }
+        result += MathHelpers::DistanceBetweenPoints(Points[Points.size() - 1], Points[0]);
+        return result;
+    }
+    virtual double GetArea() const = 0;
+    Polygon(QVector<QPointF> points) : Points(points)
+    {
+    }
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override
     {
+        paintPath.clear();
+        paintPath.moveTo(Points.first());
+        for (QPointF const &point : Points)
+        {
+            paintPath.lineTo(point);
+        }
+        paintPath.closeSubpath();
+        painter->drawPath(paintPath);
         Draw(painter);
     }
-
-    virtual ~Polygon() {}
 };
 
 class Triangle : public Polygon
 {
 private:
-    QPointF _a;
-    QPointF _b;
-    QPointF _c;
-
     double _lengthA_B;
     double _lengthB_C;
     double _lengthC_A;
@@ -39,57 +56,52 @@ private:
 public:
     void SetA(QPointF a)
     {
-        _a = a;
-        _lengthA_B = MathHelpers::DistanceBetweenPoints(a, _b);
+        Points[0] = a;
+        _lengthA_B = MathHelpers::DistanceBetweenPoints(a, GetB());
+        update();
     }
     void SetB(QPointF b)
     {
-        _b = b;
-        _lengthB_C = MathHelpers::DistanceBetweenPoints(b, _c);
+        Points[1] = b;
+        _lengthB_C = MathHelpers::DistanceBetweenPoints(b, GetC());
+        update();
     }
     void SetC(QPointF c)
     {
-        _c = c;
-        _lengthC_A = MathHelpers::DistanceBetweenPoints(c, _a);
+        Points[2] = c;
+        _lengthC_A = MathHelpers::DistanceBetweenPoints(c, GetA());
+        update();
     }
 
-    QPointF GetA() const { return _a; };
-    QPointF GetB() const { return _b; };
-    QPointF GetC() const { return _c; };
+    QPointF GetA() const { return Points[0]; };
+    QPointF GetB() const { return Points[1]; };
+    QPointF GetC() const
+    {
+        return Points[2];
+    };
 
-    Triangle(QPointF a, QPointF b, QPointF c) : _a(a), _b(b), _c(c),
-                                                _lengthA_B(MathHelpers::DistanceBetweenPoints(a, b)),
+    Triangle(QPointF a, QPointF b, QPointF c) : _lengthA_B(MathHelpers::DistanceBetweenPoints(a, b)),
                                                 _lengthB_C(MathHelpers::DistanceBetweenPoints(b, c)),
-                                                _lengthC_A(MathHelpers::DistanceBetweenPoints(c, a))
+                                                _lengthC_A(MathHelpers::DistanceBetweenPoints(c, a)),
+                                                Polygon({a, b, c})
     {
     }
     QRectF boundingRect() const override
     {
-        double smallestX = std::min(_a.x(), std::min(_b.x(), _c.x()));
-        double smallestY = std::min(_a.y(), std::min(_b.y(), _c.y()));
-        double biggestX = std::max(_a.x(), std::max(_b.x(), _c.x()));
-        double biggestY = std::max(_a.y(), std::max(_b.y(), _c.y()));
+        double smallestX = std::min(GetA().x(), std::min(GetB().x(), GetC().x()));
+        double smallestY = std::min(GetA().y(), std::min(GetB().y(), GetC().y()));
+        double biggestX = std::max(GetA().x(), std::max(GetB().x(), GetC().x()));
+        double biggestY = std::max(GetA().y(), std::max(GetB().y(), GetC().y()));
 
-        return QRectF(smallestX, smallestY, biggestX, biggestY);
+        // return QRectF(smallestX, smallestY, biggestX, biggestY);
+        return QRectF(-400, -400, 400, 400);
     }
 
     void Draw(QPainter *painter) override
     {
-        QLineF a(_a, _b);
-        QLineF b(_b, _c);
-        QLineF c(_c, _a);
-        QPointF p = GetMedianIntersection();
-        painter->setPen(QPen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-        painter->drawLine(a);
-        painter->drawLine(b);
-        painter->drawLine(c);
-        painter->setPen(QPen(Qt::red, 10, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-        painter->drawPoint(p);
-    }
 
-    double GetPerimeter() const override
-    {
-        return _lengthA_B + _lengthB_C + _lengthC_A;
+        painter->setPen(QPen(Qt::red, 10, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter->drawPoint(GetMedianIntersection());
     }
     double GetArea() const override
     {
@@ -130,8 +142,6 @@ public:
 
     QPointF GetMedianIntersection() const
     {
-        return QPointF((_a.x() + _b.x() + _c.x()) / 3.0f, (_a.y() + _b.y() + _c.y()) / 3.0f);
+        return QPointF((GetA().x() + GetB().x() + GetC().x()) / 3.0f, (GetA().y() + GetB().y() + GetC().y()) / 3.0f);
     }
-
-    virtual ~Triangle() {}
 };
