@@ -88,18 +88,11 @@ public:
     }
     QRectF boundingRect() const override
     {
-        double smallestX = std::min(GetA().x(), std::min(GetB().x(), GetC().x()));
-        double smallestY = std::min(GetA().y(), std::min(GetB().y(), GetC().y()));
-        double biggestX = std::max(GetA().x(), std::max(GetB().x(), GetC().x()));
-        double biggestY = std::max(GetA().y(), std::max(GetB().y(), GetC().y()));
-
-        // return QRectF(smallestX, smallestY, biggestX, biggestY);
         return QRectF(-400, -400, 400, 400);
     }
 
     void Draw(QPainter *painter) override
     {
-
         painter->setPen(QPen(Qt::red, 10, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         painter->drawPoint(GetMedianIntersection());
     }
